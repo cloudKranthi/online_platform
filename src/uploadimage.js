@@ -1,17 +1,18 @@
 const cloudinary = require('./utils/cloudinary');
-async function uploadImage(localFilePath){
-    try{
-     const results = await cloudinary.uploader.upload(localFilePath,{
-        resource_type:"auto"
-     })
-    console.log(" URI:",results.secure_url);
-    return results.secure_url;
 
+const fs = require('fs');
 
-    }catch(error){
-   fs.unlinkSync(localFilePath)
-   return null
+async function uploadImage(localFilePath) {
+    try {
+        const results = await cloudinary.uploader.upload(localFilePath, {
+            resource_type: "auto"
+        });
+        return results.secure_url;
+    } catch (error) {
+        if (fs.existsSync(localFilePath)) fs.unlinkSync(localFilePath);
+        console.log(error)
+        return null;
     }
-    
 }
+
 module.exports = uploadImage;

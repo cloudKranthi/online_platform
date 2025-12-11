@@ -14,5 +14,6 @@ const uploadImage = require('./src/uploadimage.js')
       console.log("mongo db connection failed",err);
    })
  
-uploadImage('C:/Users/Shiva/Pictures/Screenshots/protofoliosample.jpg')
-uploadImage("C:/Users/Shiva/Pictures/Screenshots/Screenshot 2025-12-07 075352.png")
+app.listen(PORT,()=>{
+   console.log("derver is running on port :",PORT)
+})
