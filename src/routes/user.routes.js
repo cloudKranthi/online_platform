@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-
-const registerUser = require('../controllers/user.controller'); // ✅ fixed file name
+const {loginUser,logoutUser,registerUser} = require('../controllers/user.controller') // ✅ fixed file name
 const upload = require('../middleware/multer.middleware');       // ✅ correct
+const verifyJWT = require('../middleware/auth.middleware');
 
 router.post(
     "/register",
@@ -12,5 +12,6 @@ router.post(
     ]),
     registerUser
 );
-
+router.route("/login").post(loginUser)
+router.route('/logout').post(verifyJWT,logoutUser)
 module.exports = router;
