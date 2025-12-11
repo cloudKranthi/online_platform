@@ -1,5 +1,5 @@
 const asyncHandler = require("../utils/asyncHandler");
-const jwt = requie("jwt")
+const jwt = require("jsonwebtoken")
 const User = require("../models/user.models")
 const verifyJWT = asyncHandler(async (req,res,next)=>{
 try{
