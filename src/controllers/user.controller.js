@@ -2,6 +2,7 @@ const asyncHandler = require("../utils/asyncHandler");
 const User = require("../models/user.models");
 const uploadImage = require("../uploadimage");
 const fs = require("fs");
+const jwt = require('jsonwebtoken')
 const ApiResponse = require('../utils/ApiResponse');
 const { none } = require("../middleware/multer.middleware");
 const generateaccessandrefreshtokens = async (userId)=>{
@@ -146,4 +147,31 @@ const logoutUser = asyncHandler(async (req,res)=>{
  .json(new ApiResponse(200,{},"User Logged Out"))
  
 })
-module.exports = {registerUser,loginUser,logoutUser};
+const refreshAccessToken = asyncHandler(async(req,res)=>{
+const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
+if(!incomingRefreshToken){
+  throw new Error('unauthorized request')
+}
+try{
+const decodedToken = jwt.verify(incomingRefreshToken,process.env.REFRESH_TOKEN_SECRET)
+const user = await User.findById(decodedToken?._id)
+if(!user){
+  throw new Error('Invalid Refresh Token ')
+}
+if(incomingRefreshToken !== user?.refreshToken){
+  throw new Error('Refresh token is expired')
+}
+const options ={
+  httpOnly: true,
+  secure:true
+}
+const {accessToken,newrefreshToken} =  await generateaccessandrefreshtokens(user._id)
+return res.status(200).cookie("accessToken",accessToken,options)
+.cookie("refreshToken",newrefreshToken,options).json(
+  new ApiResponse(200,{accessToken,refreshToken: newrefreshToken},"Access Token refreshed")
+)}
+catch(error){
+  throw new Error(error?.message || " Invalid refresh Token")
+}
+})
+module.exports = {registerUser,loginUser,logoutUser,refreshAccessToken};
