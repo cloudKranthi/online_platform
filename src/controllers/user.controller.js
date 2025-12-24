@@ -212,5 +212,56 @@ const updateUserCoverImage = asyncHandler(async (req,res)=>{
   },{new:true}).select("-Password")
   return res.status(200).json(new ApiResponse(200,'cover image updated succesfully '))
 })
-
-module.exports = {registerUser,loginUser,logoutUser,changeCurrentPassword,getCurrentUser,updateAccountDetails,updateUserAvatar,updateUserCoverImage};
+const getUserChannelProfile = asyncHandler(async(req,res)=>{
+  const {username} = req.params
+  const channel = await User.aggregate([
+    {
+      $match:{
+        username:username
+      }
+    },
+    {
+      $lookup:{
+        from:"subscriptions",
+        localField:"_id",
+        foreignField:"channel",
+        as:"subscribers"
+      }
+    },
+    {
+      $lookup:{
+        from:"subscriptions",
+        localField:"_id",
+        foreignField:"subscriber",
+        as:"subscribedTo"
+      }
+    },
+    {
+      $addFields:{
+        subscribersCount:{$size:"$subscribers"},
+        channelsSubscribedToCount:{$size:"$subscribedTo"},
+        isSubscribed:{
+          $cond:{
+            if:{$in:[req.user?._id,"$subscribers.subscriber"]},
+            then:true,
+            else:false
+          }
+        }
+      }
+    },
+    {
+      $project:{
+        fullName:1,
+        username:1,
+        subscribersCount:1,
+        channelsSubscribedToCount:1,
+        isSubscribed:1
+      }
+    }
+  ])
+  if(!channel?.length){
+    throw new Error("Channel does not exist")
+  }
+  return res.status(200).json(new ApiResponse(200,channel[0],"Channel profile fetched successfully"))
+})
+module.exports = {registerUser,loginUser,logoutUser,changeCurrentPassword,getCurrentUser,updateAccountDetails,updateUserAvatar,updateUserCoverImage,getUserChannelProfile};
